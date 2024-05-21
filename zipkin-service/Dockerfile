@@ -1,7 +1,5 @@
-zipkin-service:
-image: piomin/zipkin-service
-container_name: zipkin-service
-build:
-context: ./zipkin-service
-dockerfile: Dockerfile
-ports:9411
+FROM openjdk
+MAINTAINER Piotr Minkowski <mailto:piotr.minkowski@gmail.com>
+ADD target/zipkin-service.jar zipkin-service.jar
+ENTRYPOINT ["java", "-jar", "/zipkin-service.jar"]
+EXPOSE 8761
