@@ -1,34 +1,49 @@
-node {
+pipeline {
+    agent any
 
-    withMaven(maven:'maven') {
-
-        stage('Checkout') {
-            git url: 'git@github.com:saurabh0010/sample-spring-microservices.git', CredentialsID: 'github', branch: 'master'
-        }
-
-        stage('Build') {
-            sh 'mvn clean install'
-
-            def pom = readMavenPom file:'pom.xml'
-            print pom.version
-            env.version = pom.version
-        }
-
-        stage('Image') {
-            dir ('discovery-service') {
-                def app = docker.build "localhost:5000/discovery-service:${env.version}"
-                app.push()
-            }
-        }
-
-        stage ('Run') {
-            docker.image("localhost:5000/discovery-service:${env.version}").run('-p 8761:8761 -h discovery --name discovery')
-        }
-
-        stage ('Final') {
-            build job: 'account-service-pipeline', wait: false
-        }      
-
+    environment {
+        DOCKER_CREDENTIALS_ID = 'dockerhub' // Replace with your credentials ID
+        DOCKER_IMAGE = 'gsaidileep/zipkin-service' // Replace with your Docker image name
     }
 
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/saidilee/microservice.git' // Replace with your repository URL
+            }
+        }
+        stage('Build Maven Project') {
+            steps {
+                sh '''
+                cd zipkin-service
+                mvn clean install
+                '''
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    docker.build("${DOCKER_IMAGE}", "zipkin-service/")
+                }
+            }
+        }
+        stage('Login to Docker Registry') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKER_CREDENTIALS_ID}") {
+                        // Dummy step to login to registry
+                    }
+                }
+            }
+        }
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKER_CREDENTIALS_ID}") {
+                        docker.image("${DOCKER_IMAGE}").push('latest')
+                    }
+                }
+            }
+        }
+    }
 }
