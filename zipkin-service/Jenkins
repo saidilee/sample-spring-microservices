@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_CREDENTIALS_ID = 'dockerhub' // Replace with your credentials ID
+        DOCKER_CREDENTIALS_ID = 'gsaidileep' // Replace with your credentials ID
         DOCKER_IMAGE = 'gsaidileep/zipkin-service' // Replace with your Docker image name
     }
 
